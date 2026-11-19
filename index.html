@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUCKY BOX BY EMBE - Chọn Hộp Quà Bí Ẩn 🎁</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Be Vietnam Pro"', 'sans-serif'],
+                        cursive: ['"Dancing Script"', 'cursive'],
+                    },
+                    keyframes: {
+                        pulseShake: {
+                            '0%, 100%': { transform: 'scale(1) rotate(0deg)' },
+                            '20%': { transform: 'scale(1.04) rotate(-3deg)' },
+                            '40%': { transform: 'scale(1.04) rotate(3deg)' },
+                            '60%': { transform: 'scale(1.04) rotate(-2deg)' },
+                            '80%': { transform: 'scale(1.04) rotate(2deg)' }
+                        },
+                        floatSlow: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        popIn: {
+                            '0%': { opacity: '0', transform: 'scale(0.8) translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'scale(1) translateY(0)' }
+                        }
+                    },
+                    animation: {
+                        pulseShake: 'pulseShake 2.5s ease-in-out infinite',
+                        floatSlow: 'floatSlow 3.5s ease-in-out infinite',
+                        popIn: 'popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            background: radial-gradient(circle at top center, #fff0f5 0%, #ffd1dc 50%, #fce4ec 100%);
+            min-height: 100vh;
+        }
+        
+        .glass-box {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .gift-lid {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform-origin: 80% 100%;
+        }
+        
+        .box-unopened:hover .gift-lid {
+            transform: translateY(-8px) rotate(-6deg);
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #f472b6;
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased font-sans flex flex-col justify-between min-h-screen relative overflow-x-hidden selection:bg-pink-300 selection:text-pink-900">
+
+    <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div class="absolute top-10 left-[6%] text-pink-300 text-3xl opacity-70 animate-floatSlow">✨</div>
+        <div class="absolute top-20 right-[10%] text-rose-400 text-4xl opacity-60 animate-floatSlow" style="animation-delay: 1s;">💖</div>
+        <div class="absolute bottom-28 left-[8%] text-amber-300 text-3xl opacity-70 animate-floatSlow" style="animation-delay: 1.8s;">👑</div>
+        <div class="absolute bottom-16 right-[6%] text-purple-300 text-3xl opacity-60 animate-floatSlow" style="animation-delay: 0.7s;">🎁</div>
+    </div>
+
+    <header class="relative z-10 pt-8 pb-3 px-4 text-center max-w-2xl mx-auto">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-pink-200 shadow-sm text-pink-600 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-3">
+            <span>🎁</span> LUCKY BOX BY EMBE • 19/11 <span>🎁</span>
+        </div>
+        
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight">
+            LUCKY BOX BY EMBE <br />
+            <span class="bg-gradient-to-r from-pink-500 via-rose-500 to-amber-600 bg-clip-text text-transparent">
+                Mở Hộp Quà Bí Mật Dành Riêng Cho Anh ❤️
+            </span>
+        </h1>
+        
+        <p class="mt-2 text-slate-600 text-xs sm:text-sm font-medium">
+            Có 6 hộp quà bí ẩn được xáo trộn ngẫu nhiên. Chỉ có <span class="text-pink-600 font-bold">3 lượt mở</span> thôi nhé bảo bối à!
+        </p>
+
+        <div class="mt-4 inline-flex items-center gap-2.5 px-5 py-2 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg font-bold text-sm tracking-wide transform transition-transform hover:scale-105">
+            <span>🎁</span>
+            <span>Lượt mở còn lại: <span id="picksCounter" class="text-yellow-200 text-lg font-extrabold">3/3</span></span>
+        </div>
+    </header>
+
+    <main class="relative z-10 max-w-4xl mx-auto px-4 py-4 w-full flex-grow flex flex-col items-center justify-center">
+        
+        <div id="boxesGrid" class="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 w-full items-stretch"></div>
+
+        <div class="mt-8 text-center flex flex-wrap items-center justify-center gap-4">
+            <button onclick="resetGame()" class="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white hover:bg-pink-50 text-pink-600 border border-pink-300 shadow-md font-bold text-sm transition-all hover:shadow-lg hover:scale-105 active:scale-95">
+                <span>🔄</span>
+                <span>Chơi Lại Từ Đầu (Xáo Trộn Quà)</span>
+            </button>
+        </div>
+
+        <section id="historySection" class="w-full max-w-4xl mt-10 hidden">
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-lg">📜</span>
+                <h3 class="text-base font-bold text-slate-800">Bộ Thẻ Lời Nhắn Đã Mở Được (<span id="unlockedCount">0</span>/3)</h3>
+            </div>
+            <div id="historyGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+        </section>
+
+    </main>
+
+    <footer class="relative z-10 text-center text-xs text-slate-500 font-medium py-4 px-4">
+        LUCKY BOX BY EMBE • Chúc anh iu cụa em có một ngày 19/11 rạng rỡ và tràn ngập hạnh phúc! ❤️
+    </footer>
+
+    <div id="giftModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300">
+        
+        <div id="modalCard" class="relative w-full max-w-lg glass-box rounded-3xl p-6 sm:p-8 shadow-2xl border border-white/90 animate-popIn max-h-[90vh] flex flex-col justify-between overflow-y-auto">
+            
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-full p-2 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+
+            <div class="mb-3">
+                <span id="modalBadge" class="inline-block px-3.5 py-1 text-xs font-bold rounded-full">
+                    Gói Quà Bí Mật
+                </span>
+            </div>
+
+            <h2 id="modalTitle" class="text-2xl font-extrabold text-slate-900 mb-3 tracking-tight">
+                Tiêu Đề Quà
+            </h2>
+
+            <div id="modalBody" class="text-slate-700 text-sm sm:text-base leading-relaxed bg-white/80 rounded-2xl p-5 border border-pink-100/80 mb-5 font-medium whitespace-pre-line shadow-inner">
+                Nội dung lời nhắn...
+            </div>
+
+            <div class="flex flex-col sm:flex-row items-center gap-3">
+                <button id="copyBtn" onclick="copyModalText()" class="w-full sm:w-1/2 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                    </svg>
+                    <span id="copyBtnLabel">Lưu Lời Nhắn</span>
+                </button>
+                <button onclick="closeModal()" class="w-full sm:w-1/2 py-3 px-4 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white rounded-2xl font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2">
+                    <span id="continueBtnLabel">Tiếp Tục Chọn 🎁</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+        <script>
+        const rawGiftsPool = [
+            {
+                id: 'sen_sam',
+                type: 'special',
+                badge: 'Lời Nhắn Đặc Biệt 🎀',
+                badgeStyle: 'bg-pink-100 text-pink-700 border border-pink-300',
+                title: 'Phong Cách Siêu Sến Sẩm 💕',
+                text: 'Chào anh, bảo bối yêu quí của em. Hôm nay là 19/11, và với em, mọi ngày trên đời đều chỉ có một ý nghĩa duy nhất là có anh.\n\nỞ phương xa ấy, anh nhớ giữ ấm, ăn uống đầy đủ và chăm sóc sức khỏe thật tốt nhé, vì sức khỏe của anh là báu vật lớn nhất của em. Chúc anh hôm nay cũng như những ngày về sau học tập, công việc và mọi dự định đều thuận buồm xuôi gió, nhẹ nhàng như mây.\n\nDù cách xa nhau bao nhiêu cây số, trái tim em vẫn luôn chạy về phía anh mỗi nhịp đập. Thương anh!',
+                confettiColors: ['#f472b6', '#fb7185', '#ffffff', '#fbcfe8']
+            },
+            {
+                id: 'tram_ai_phi',
+                type: 'special',
+                badge: 'Lời Nhắn Đặc Biệt 👑',
+                badgeStyle: 'bg-amber-100 text-amber-800 border border-amber-300',
+                title: 'Phong Cách Trẫm & Ái Phi 📜',
+                text: 'Bẩm Hoàng thượng, hôm nay ngày 19/11, thần thiếp thay mặt hậu cung (thực ra chỉ có mình thiếp thôi) dâng lên bệ hạ một nén tâm hương bình an.\n\nChúc Hoàng thượng long thể khang cường, tinh thần sảng khoái, văn thao võ lược bách chiến bách thắng trên con đường học tập lẫn công việc. Đừng mải mê xử lý triều chính mà quên ăn quên ngủ, thần thiếp ở nơi phương xa xót xa không yên.\n\nHôm nay và những ngày về sau, bệ hạ cứ việc rạng rỡ, còn mọi sự nhung nhớ cứ để thần thiếp lo liệu! Ái Phi của Hoàng Thượng, Thanh Thủy',
+                confettiColors: ['#f59e0b', '#dc2626', '#fef08a', '#ffffff']
+            },
+            {
+                id: 'tong_tai',
+                type: 'special',
+                badge: 'Lời Nhắn Đặc Biệt 💼',
+                badgeStyle: 'bg-slate-900 text-amber-300 border border-amber-400/40',
+                title: 'Phong Cách Tổng Tài Bá Đạo 🖤',
+                text: 'Nghe đây, Thư ký riêng của tôi:\n\nHôm nay ngày 19/11, tôi ra lệnh cho anh từ ngày hôm nay và những ngày về sau phải giữ gìn sức khỏe thật tốt, ăn uống đúng giờ và giải quyết gọn ghẽ mọi mục tiêu học tập lẫn công việc. Tôi không cho phép anh tự làm bản thân kiệt sức hay suy nghĩ lung tung thêm một giây nào nữa.\n\nHết giờ làm là buông hết, tôi cho phép anh nghỉ ngơi và thả lỏng hoàn toàn. Làm tốt thì tôi có thưởng, còn nếu dám để bản thân mệt mỏi... anh tự biết hậu quả rồi đấy. Thân gửi anh, bảo bối ',
+                confettiColors: ['#1e293b', '#f59e0b', '#38bdf8', '#ffffff']
+            },
+            {
+                id: 'lucky_1',
+                type: 'lucky',
+                badge: 'Chúc May Mắn Lần Sau 🫂',
+                badgeStyle: 'bg-slate-100 text-slate-700 border border-slate-300',
+                title: 'Gửi Tặng Anh Một Cái Ôm 🤗',
+                text: 'Chúc anh may mắn lần sau! Hộp này chỉ chứa một cái ôm ấm áp từ xa thôi nha~\n\nChọn hộp khác xem có trúng lời nhắn bí mật sến sẩm không nào!',
+                confettiColors: null
+            },
+            {
+                id: 'lucky_2',
+                type: 'lucky',
+                badge: 'Chúc May Mắn Lần Sau 💌',
+                badgeStyle: 'bg-purple-100 text-purple-700 border border-purple-300',
+                title: 'Hộp Đầy Ắp Sự Nhớ Nhung 💭',
+                text: 'Suýt trúng rồi! Hộp trống trơn nhưng đầy ắp sự nhớ nhung của em nè!\n\nThử vận may ở hộp khác xem sao nha~',
+                confettiColors: null
+            },
+            {
+                id: 'lucky_3',
+                type: 'lucky',
+                badge: 'Chúc May Mắn Lần Sau 💧',
+                badgeStyle: 'bg-blue-100 text-blue-700 border border-blue-300',
+                title: 'Lời Nhắc Uống Nước Đầy Đủ 🥤',
+                text: 'Trượt mất rồi! Lượt này không có lời nhắn sến sẩm, nhưng có lời nhắc anh nhớ uống đủ 2 lít nước mỗi ngày và giữ gìn sức khỏe đó nha!',
+                confettiColors: null
+            }
+        ];
+
+        let currentBoxes = [];
+        let picksLeft = 3;
+        let activeGift = null;
+        let unlockedSpecialGifts = [];
+
+        function shuffle(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function resetGame() {
+            picksLeft = 3;
+            unlockedSpecialGifts = [];
+            activeGift = null;
+            currentBoxes = shuffle(rawGiftsPool).map(gift => ({
+                giftData: gift,
+                isOpened: false
+            }));
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('picksCounter').textContent = `${picksLeft}/3`;
+
+            const gridEl = document.getElementById('boxesGrid');
+            gridEl.innerHTML = '';
+
+            currentBoxes.forEach((box, idx) => {
+                const isOpened = box.isOpened;
+                const isLocked = !isOpened && picksLeft <= 0;
+
+                const cardDiv = document.createElement('div');
+                cardDiv.className = `box-card relative glass-box rounded-3xl p-5 flex flex-col items-center justify-between border-2 transition-all duration-300 shadow-md ${
+                    isOpened 
+                        ? 'border-pink-300 bg-white/90 scale-95 opacity-80 cursor-pointer hover:opacity-100' 
+                        : isLocked 
+                            ? 'border-slate-300 bg-slate-100/60 opacity-50 cursor-not-allowed'
+                            : 'border-pink-200 hover:border-pink-400 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer box-unopened'
+                }`;
+
+                if (!isOpened && !isLocked) {
+                    cardDiv.onclick = () => openBox(idx);
+                } else if (isOpened) {
+                    cardDiv.onclick = () => showGiftModal(box.giftData, false);
+                }
+
+                cardDiv.innerHTML = `
+                    <div class="absolute -top-3 px-3 py-0.5 ${isOpened ? 'bg-slate-400' : 'bg-pink-500'} text-white text-[11px] font-bold rounded-full shadow-sm tracking-wider">
+                        Hộp #${idx + 1}
+                    </div>
+
+                    <div class="w-full text-center mt-2">
+                        <span class="text-xs font-semibold ${isOpened ? 'text-slate-500' : 'text-pink-500'} uppercase tracking-wider">
+                            ${isOpened ? 'Đã Bóc Tem' : 'Bí Mật'}
+                        </span>
+                        <h4 class="text-sm sm:text-base font-bold text-slate-800 mt-0.5">
+                            ${isOpened ? box.giftData.title : 'Hộp Quà Ẩn Số'}
+                        </h4>
+                    </div>
+
+                    <div class="my-4 relative w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center ${!isOpened && !isLocked ? 'animate-pulseShake' : ''}">
+                        <svg class="w-24 h-24 sm:w-28 sm:h-28 filter drop-shadow-md" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="100" cy="180" rx="55" ry="10" fill="rgba(244, 114, 182, 0.25)" />
+                            <path d="M40 90 L160 90 L150 170 C150 173 147 175 144 175 L56 175 C53 175 50 173 50 170 L40 90 Z" fill="${isOpened ? '#94A3B8' : '#F472B6'}" />
+                            <path d="M40 90 L100 90 L100 175 L56 175 C53 175 50 173 50 170 L40 90 Z" fill="#000000" opacity="0.1" />
+                            <rect x="88" y="90" width="24" height="85" fill="#FFFFFF" opacity="0.9" />
+                            <g class="gift-lid" style="${isOpened ? 'transform: translateY(-16px) rotate(-18deg);' : ''}">
+                                <rect x="32" y="65" width="136" height="28" rx="5" fill="${isOpened ? '#64748B' : '#FB7185'}" />
+                                <rect x="88" y="65" width="24" height="28" fill="#FFFFFF" />
+                                <path d="M100 65 C80 40 55 45 68 65 C80 75 100 65 100 65 Z" fill="#FFFFFF" />
+                                <path d="M100 65 C120 40 145 45 132 65 C120 75 100 65 100 65 Z" fill="#FFFFFF" />
+                                <circle cx="100" cy="65" r="6" fill="${isOpened ? '#475569' : '#F472B6'}" />
+                            </g>
+                        </svg>
+                    </div>
+
+                    <button class="w-full py-2 px-3 ${
+                        isOpened 
+                            ? 'bg-slate-200 text-slate-600' 
+                            : isLocked 
+                                ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-sm hover:shadow-md'
+                    } rounded-xl font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-1.5">
+                        <span>${isOpened ? 'Xem Thẻ Quà' : isLocked ? 'Đã Hết Lượt' : 'Mở Hộp Quà'}</span>
+                        <span>${isOpened ? '📜' : isLocked ? '🔒' : '✨'}</span>
+                    </button>
+                `;
+                gridEl.appendChild(cardDiv);
+            });
+
+            renderHistory();
+        }
+
+        function openBox(index) {
+            if (picksLeft <= 0 || currentBoxes[index].isOpened) return;
+
+            picksLeft--;
+            currentBoxes[index].isOpened = true;
+            const gift = currentBoxes[index].giftData;
+
+            if (gift.type === 'special' && !unlockedSpecialGifts.some(g => g.id === gift.id)) {
+                unlockedSpecialGifts.push(gift);
+            }
+
+            updateUI();
+            showGiftModal(gift, true);
+        }
+
+        function showGiftModal(gift, triggerEffects) {
+            activeGift = gift;
+
+            const badgeEl = document.getElementById('modalBadge');
+            badgeEl.textContent = gift.badge;
+            badgeEl.className = `inline-block px-3.5 py-1 text-xs font-bold rounded-full ${gift.badgeStyle}`;
+
+            document.getElementById('modalTitle').textContent = gift.title;
+            document.getElementById('modalBody').textContent = gift.text;
+
+            const copyLabel = document.getElementById('copyBtnLabel');
+            copyLabel.textContent = 'Lưu Lời Nhắn';
+
+            const continueLabel = document.getElementById('continueBtnLabel');
+            continueLabel.textContent = picksLeft > 0 ? `Tiếp Tục Chọn (${picksLeft} lượt) 🎁` : 'Xem Lại Bộ Thẻ ✨';
+
+            const modal = document.getElementById('giftModal');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+
+            if (triggerEffects && gift.type === 'special' && typeof confetti === 'function') {
+                confetti({
+                    particleCount: 80,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: gift.confettiColors || ['#f472b6', '#fb7185', '#fef08a']
+                });
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('giftModal');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            modal.classList.remove('opacity-100');
+        }
+
+        function copyModalText() {
+            if (!activeGift) return;
+            const label = document.getElementById('copyBtnLabel');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(activeGift.text).then(() => {
+                    label.textContent = 'Đã Sao Chép! ✅';
+                }).catch(() => {
+                    label.textContent = 'Thử Lại Nha';
+                });
+            } else {
+                label.textContent = 'Đã Chọn! ✅';
+            }
+        }
+
+        function renderHistory() {
+            const section = document.getElementById('historySection');
+            const historyGrid = document.getElementById('historyGrid');
+            const countEl = document.getElementById('unlockedCount');
+
+            countEl.textContent = unlockedSpecialGifts.length;
+
+            if (unlockedSpecialGifts.length === 0) {
+                section.classList.add('hidden');
+                historyGrid.innerHTML = '';
+                return;
+            }
+
+            section.classList.remove('hidden');
+            historyGrid.innerHTML = unlockedSpecialGifts.map(gift => `
+                <div onclick='showGiftModal(${JSON.stringify(gift)}, false)' class="glass-box rounded-2xl p-4 border border-pink-200 shadow-sm hover:shadow-md transition-all cursor-pointer">
+                    <div class="text-xs font-bold text-pink-600 mb-1">${gift.title}</div>
+                    <p class="text-xs text-slate-600 line-clamp-3 whitespace-pre-line">${gift.text}</p>
+                </div>
+            `).join('');
+        }
+
+        resetGame();
+    </script>
+</body>
+</html>
